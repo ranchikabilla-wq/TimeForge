@@ -99,10 +99,6 @@ export default function LoginPage() {
               {isLoading ? <div className="size-5 border-2 border-primary-foreground border-t-transparent rounded-full animate-spin" /> : <><span>Sign In</span><LogIn className="size-4" /></>}
             </button>
           </form>
-
-          <div className="mt-6 text-center">
-            <p className="text-xs text-muted-foreground">Demo mode — enter any credentials to continue</p>
-          </div>
         </div>
 
         <div className="text-center mt-4">
