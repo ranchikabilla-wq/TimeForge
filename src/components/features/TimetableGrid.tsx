@@ -121,8 +121,8 @@ export default function TimetableGrid({ grid, config, branchName, branchId, enab
   return (
     <div className="print-area">
       <div className="text-center mb-3 hidden print:block"><h2 className="font-display font-bold text-xl">{branchName} — Timetable</h2></div>
-      <div className="overflow-x-auto">
-        <table className="w-full border-collapse min-w-[640px]">
+      <div className="overflow-x-auto -mx-4 px-4 sm:mx-0 sm:px-0">
+        <table className="w-full border-collapse min-w-[320px] sm:min-w-[500px] md:min-w-[640px]">
           <thead>
             <tr>
               <th className={cn('surface-high text-xs font-display font-semibold text-muted-foreground text-left rounded-tl-xl', compact ? 'px-2 py-2 w-20' : 'px-4 py-3 w-28')}>Day / Period</th>

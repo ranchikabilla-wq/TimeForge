@@ -193,14 +193,14 @@ export default function SubjectsStep() {
             const subColor = subjectColors[s.name] || s.color;
 
             return (
-              <div key={s.id} className="group flex items-center justify-between rounded-xl px-4 py-3 surface-high transition-all hover:glow-primary">
+              <div key={s.id} className="group flex items-center justify-between rounded-xl px-3 sm:px-4 py-3 surface-high transition-all hover:glow-primary">
                 {editingId === s.id ? (
-                  <div className="flex flex-wrap items-center gap-2 flex-1">
-                    <input value={editData.name} onChange={(e) => setEditData({ ...editData, name: e.target.value })} className="flex-1 min-w-[120px] h-8 px-3 surface-highest rounded-lg text-sm font-body border-0 focus:outline-none focus:ring-1 focus:ring-primary" autoFocus />
-                    <input value={editData.shortName} onChange={(e) => setEditData({ ...editData, shortName: e.target.value })} className="w-20 h-8 px-3 surface-highest rounded-lg text-sm font-body uppercase border-0 focus:outline-none focus:ring-1 focus:ring-primary" maxLength={6} />
-                    <input value={editData.teacherName} onChange={(e) => setEditData({ ...editData, teacherName: e.target.value })} className="flex-1 min-w-[100px] h-8 px-3 surface-highest rounded-lg text-sm font-body border-0 focus:outline-none focus:ring-1 focus:ring-primary" />
-                    <button onClick={saveEdit} className="size-8 flex items-center justify-center rounded-lg bg-emerald-500/20 text-emerald-400"><Check className="size-3.5" /></button>
-                    <button onClick={() => setEditingId(null)} className="size-8 flex items-center justify-center rounded-lg bg-destructive/10 text-destructive"><X className="size-3.5" /></button>
+                  <div className="flex flex-wrap items-center gap-2 flex-1 min-w-0">
+                    <input value={editData.name} onChange={(e) => setEditData({ ...editData, name: e.target.value })} className="flex-1 min-w-[80px] sm:min-w-[120px] h-8 px-2 sm:px-3 surface-highest rounded-lg text-sm font-body border-0 focus:outline-none focus:ring-1 focus:ring-primary" autoFocus />
+                    <input value={editData.shortName} onChange={(e) => setEditData({ ...editData, shortName: e.target.value })} className="w-14 sm:w-20 h-8 px-2 sm:px-3 surface-highest rounded-lg text-sm font-body uppercase border-0 focus:outline-none focus:ring-1 focus:ring-primary" maxLength={6} />
+                    <input value={editData.teacherName} onChange={(e) => setEditData({ ...editData, teacherName: e.target.value })} className="flex-1 min-w-[80px] sm:min-w-[100px] h-8 px-2 sm:px-3 surface-highest rounded-lg text-sm font-body border-0 focus:outline-none focus:ring-1 focus:ring-primary" />
+                    <button onClick={saveEdit} className="size-8 flex items-center justify-center rounded-lg bg-emerald-500/20 text-emerald-400 shrink-0"><Check className="size-3.5" /></button>
+                    <button onClick={() => setEditingId(null)} className="size-8 flex items-center justify-center rounded-lg bg-destructive/10 text-destructive shrink-0"><X className="size-3.5" /></button>
                   </div>
                 ) : (
                   <>

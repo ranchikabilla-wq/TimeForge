@@ -79,34 +79,34 @@ export default function Generator() {
         </div>
 
         {/* Bottom bar */}
-        <div className="shrink-0 surface-low px-6 lg:px-10 py-4 flex items-center justify-between gap-3">
-          <div className="flex items-center gap-3">
+        <div className="shrink-0 surface-low px-4 sm:px-6 lg:px-10 py-3 sm:py-4 flex items-center justify-between gap-2 sm:gap-3">
+          <div className="flex items-center gap-2 sm:gap-3">
             <button onClick={handleBack} disabled={currentStep === 0}
-              className="h-11 px-5 surface-high rounded-xl text-sm font-display font-medium flex items-center gap-2 transition-all hover:scale-[1.02] active:scale-[0.98] disabled:opacity-30 disabled:cursor-not-allowed">
-              <ArrowLeft className="size-4" /> Back
+              className="h-10 sm:h-11 px-4 sm:px-5 surface-high rounded-xl text-sm font-display font-medium flex items-center gap-1.5 sm:gap-2 transition-all hover:scale-[1.02] active:scale-[0.98] disabled:opacity-30 disabled:cursor-not-allowed">
+              <ArrowLeft className="size-4" /><span className="hidden sm:inline">Back</span>
             </button>
             <button onClick={handleReset}
-              className="h-11 px-4 text-secondary text-sm font-display font-medium flex items-center gap-2 transition-all hover:bg-secondary/10 rounded-xl">
-              <RotateCcw className="size-4" /> Reset
+              className="h-10 sm:h-11 px-3 sm:px-4 text-secondary text-sm font-display font-medium flex items-center gap-1.5 sm:gap-2 transition-all hover:bg-secondary/10 rounded-xl">
+              <RotateCcw className="size-4" /><span className="hidden sm:inline">Reset</span>
             </button>
           </div>
 
-          <div className="flex items-center gap-4">
-            <span className="label-system text-muted-foreground hidden sm:block">
+          <div className="flex items-center gap-2 sm:gap-4">
+            <span className="label-system text-muted-foreground hidden md:block">
               Step {currentStep + 1} of {totalSteps}
             </span>
-            <div className="w-24 h-1 surface-highest rounded-full overflow-hidden hidden sm:block">
+            <div className="w-16 sm:w-24 h-1 surface-highest rounded-full overflow-hidden hidden md:block">
               <div className="h-full bg-primary rounded-full transition-all" style={{ width: `${((currentStep + 1) / totalSteps) * 100}%` }} />
             </div>
 
             {isLastStep ? (
               <button onClick={handleGenerate} disabled={!canProceed()}
-                className="h-11 px-8 bg-primary text-primary-foreground rounded-xl text-sm font-display font-bold flex items-center gap-2 btn-bubble disabled:opacity-40 disabled:cursor-not-allowed">
-                <Sparkles className="size-4" /> Forge Timetable
+                className="h-10 sm:h-11 px-5 sm:px-8 bg-primary text-primary-foreground rounded-xl text-sm font-display font-bold flex items-center gap-1.5 sm:gap-2 btn-bubble disabled:opacity-40 disabled:cursor-not-allowed">
+                <Sparkles className="size-4" /><span className="hidden sm:inline">Forge Timetable</span>
               </button>
             ) : (
               <button onClick={handleNext} disabled={!canProceed()}
-                className="h-11 px-8 bg-primary text-primary-foreground rounded-xl text-sm font-display font-bold flex items-center gap-2 btn-bubble disabled:opacity-40 disabled:cursor-not-allowed">
+                className="h-10 sm:h-11 px-5 sm:px-8 bg-primary text-primary-foreground rounded-xl text-sm font-display font-bold flex items-center gap-1.5 sm:gap-2 btn-bubble disabled:opacity-40 disabled:cursor-not-allowed">
                 Next <ArrowRight className="size-4" />
               </button>
             )}

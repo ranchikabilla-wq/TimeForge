@@ -12,12 +12,15 @@ export default {
 	theme: {
 		container: {
 			center: true,
-			padding: '2rem',
-			screens: {
-				'2xl': '1400px'
-			}
+			padding: {
+				DEFAULT: '1rem',
+				sm: '2rem',
+			},
 		},
 		extend: {
+			screens: {
+				'xs': '480px',
+			},
 			fontFamily: {
 				display: ['Space Grotesk', 'sans-serif'],
 				body: ['Manrope', 'sans-serif'],

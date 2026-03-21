@@ -260,8 +260,8 @@ export default function LandingPage() {
               </div>
             </div>
             {/* Floating accent badge */}
-            <div className="absolute -top-3 -right-3 lg:-top-4 lg:-right-4 size-16 lg:size-20 rounded-2xl bg-secondary/15 backdrop-blur-sm flex items-center justify-center ghost-border animate-pulse">
-              <Clock className="size-6 lg:size-8 text-secondary" />
+            <div className="absolute -top-2 -right-2 sm:-top-3 sm:-right-3 lg:-top-4 lg:-right-4 size-12 sm:size-14 lg:size-20 rounded-xl sm:rounded-2xl bg-secondary/15 backdrop-blur-sm flex items-center justify-center ghost-border animate-pulse">
+              <Clock className="size-5 sm:size-6 lg:size-8 text-secondary" />
             </div>
           </div>
         </div>

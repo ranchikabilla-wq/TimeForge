@@ -26,13 +26,13 @@ export default function SavedTimetables() {
   }
 
   return (
-    <div className="px-6 lg:px-10 xl:px-14 py-8">
-      <div className="flex items-center justify-between mb-8">
+    <div className="px-4 sm:px-6 lg:px-10 xl:px-14 py-6 sm:py-8">
+      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 mb-6 sm:mb-8">
         <div>
-          <h1 className="font-display font-bold text-2xl">Saved Timetables</h1>
+          <h1 className="font-display font-bold text-xl sm:text-2xl">Saved Timetables</h1>
           <p className="text-sm text-muted-foreground mt-1">{savedTimetables.length} timetable{savedTimetables.length !== 1 && 's'} saved locally</p>
         </div>
-        <button onClick={() => navigate('/generator')} className="h-11 px-6 bg-primary text-primary-foreground rounded-xl text-sm font-display font-bold btn-bubble">+ New</button>
+        <button onClick={() => navigate('/generator')} className="h-10 sm:h-11 px-5 sm:px-6 bg-primary text-primary-foreground rounded-xl text-sm font-display font-bold btn-bubble self-start">+ New</button>
       </div>
 
       <div className="grid sm:grid-cols-2 xl:grid-cols-3 gap-5">

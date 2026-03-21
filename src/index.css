@@ -61,9 +61,19 @@
 
 @layer base {
   * { @apply border-border; }
+  html {
+    @apply overflow-x-hidden;
+    scroll-behavior: smooth;
+  }
   body {
     @apply bg-background text-foreground;
     font-family: 'Manrope', sans-serif;
+    -webkit-overflow-scrolling: touch;
+    overscroll-behavior-x: none;
+  }
+  /* Prevent horizontal scroll on mobile */
+  #root {
+    @apply max-w-full overflow-x-hidden;
   }
   h1, h2, h3, h4, h5, h6 { font-family: 'Space Grotesk', sans-serif; }
 }

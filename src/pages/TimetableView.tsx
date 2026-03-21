@@ -82,29 +82,29 @@ export default function TimetableView() {
   return (
     <div className="px-6 lg:px-10 xl:px-14 py-6 fade-in">
       {/* Toolbar */}
-      <div className="no-print flex flex-col sm:flex-row sm:items-center justify-between gap-4 mb-6">
-        <div className="flex items-center gap-3">
-          <button onClick={() => navigate('/generator')} className="size-9 surface-high rounded-xl flex items-center justify-center hover:scale-105 transition-all"><ArrowLeft className="size-4" /></button>
-          <h1 className="font-display font-bold text-xl">Forged Timetable</h1>
+      <div className="no-print flex flex-col sm:flex-row sm:items-center justify-between gap-3 mb-6">
+        <div className="flex items-center gap-2">
+          <button onClick={() => navigate('/generator')} className="size-9 surface-high rounded-xl flex items-center justify-center hover:scale-105 transition-all shrink-0"><ArrowLeft className="size-4" /></button>
+          <h1 className="font-display font-bold text-lg sm:text-xl truncate">Forged Timetable</h1>
         </div>
         <div className="flex items-center gap-2 flex-wrap">
-          <button onClick={handleEditInputs} className="h-9 px-4 surface-high rounded-xl text-sm font-display font-medium flex items-center gap-2 text-secondary transition-all hover:scale-[1.02] active:scale-[0.98]"><Pencil className="size-3.5" /> Edit Inputs</button>
+          <button onClick={handleEditInputs} className="h-9 px-3 sm:px-4 surface-high rounded-xl text-sm font-display font-medium flex items-center gap-1.5 sm:gap-2 text-secondary transition-all hover:scale-[1.02] active:scale-[0.98]"><Pencil className="size-3.5" /><span className="hidden sm:inline">Edit Inputs</span></button>
           {viewMode === 'branch' && (
             <div className="flex items-center gap-0.5 surface-high rounded-xl overflow-hidden">
-              <button onClick={() => { undo(); }} disabled={!canUndo} className="h-9 px-3 text-sm font-display font-medium flex items-center gap-1 hover:bg-primary/10 transition-all disabled:opacity-30" title="Undo"><Undo2 className="size-3.5" /></button>
-              <button onClick={() => { redo(); }} disabled={!canRedo} className="h-9 px-3 text-sm font-display font-medium flex items-center gap-1 hover:bg-primary/10 transition-all disabled:opacity-30" title="Redo"><Redo2 className="size-3.5" /></button>
+              <button onClick={() => { undo(); }} disabled={!canUndo} className="h-9 px-2 sm:px-3 text-sm font-display font-medium flex items-center gap-1 hover:bg-primary/10 transition-all disabled:opacity-30" title="Undo"><Undo2 className="size-3.5" /></button>
+              <button onClick={() => { redo(); }} disabled={!canRedo} className="h-9 px-2 sm:px-3 text-sm font-display font-medium flex items-center gap-1 hover:bg-primary/10 transition-all disabled:opacity-30" title="Redo"><Redo2 className="size-3.5" /></button>
             </div>
           )}
           {viewMode === 'branch' && (
             <button onClick={() => setDragEnabled(!dragEnabled)}
-              className={cn('h-9 px-4 rounded-xl text-sm font-display font-medium flex items-center gap-2 transition-all',
+              className={cn('h-9 px-3 sm:px-4 rounded-xl text-sm font-display font-medium flex items-center gap-1.5 sm:gap-2 transition-all',
                 dragEnabled ? 'bg-primary/15 text-primary glow-primary' : 'surface-high hover:bg-primary/5')}>
-              <GripVertical className="size-3.5" /> {dragEnabled ? 'Editing' : 'Edit'}
+              <GripVertical className="size-3.5" /><span className="hidden sm:inline">{dragEnabled ? 'Editing' : 'Edit'}</span>
             </button>
           )}
-          <button onClick={handleRegenerate} className="h-9 px-4 surface-high rounded-xl text-sm font-display font-medium flex items-center gap-2 transition-all hover:scale-[1.02]"><RefreshCw className="size-3.5" /> Regenerate</button>
+          <button onClick={handleRegenerate} className="h-9 px-3 sm:px-4 surface-high rounded-xl text-sm font-display font-medium flex items-center gap-1.5 sm:gap-2 transition-all hover:scale-[1.02]"><RefreshCw className="size-3.5" /><span className="hidden sm:inline">Regenerate</span></button>
           <div className="relative">
-            <button onClick={() => setShowExportMenu(!showExportMenu)} className="h-9 px-4 surface-high rounded-xl text-sm font-display font-medium flex items-center gap-2"><FileText className="size-3.5" /> Export <ChevronDown className="size-3" /></button>
+            <button onClick={() => setShowExportMenu(!showExportMenu)} className="h-9 px-3 sm:px-4 surface-high rounded-xl text-sm font-display font-medium flex items-center gap-1.5 sm:gap-2"><FileText className="size-3.5" /><span className="hidden sm:inline">Export</span> <ChevronDown className="size-3" /></button>
             {showExportMenu && (
               <>
                 <div className="fixed inset-0 z-40" onClick={() => setShowExportMenu(false)} />
@@ -117,13 +117,13 @@ export default function TimetableView() {
           </div>
           {showSaveInput ? (
             <div className="flex items-center gap-2">
-              <input type="text" value={saveName} onChange={(e) => setSaveName(e.target.value)} placeholder="Timetable name..." onKeyDown={(e) => e.key === 'Enter' && handleSave()} autoFocus
-                className="h-9 px-4 surface-highest rounded-xl text-sm font-body focus:outline-none focus:ring-1 focus:ring-primary w-44" />
-              <button onClick={handleSave} className="h-9 px-4 bg-primary text-primary-foreground rounded-xl text-sm font-display font-bold">Save</button>
-              <button onClick={() => setShowSaveInput(false)} className="h-9 px-2 text-muted-foreground text-sm">Cancel</button>
+              <input type="text" value={saveName} onChange={(e) => setSaveName(e.target.value)} placeholder="Name..." onKeyDown={(e) => e.key === 'Enter' && handleSave()} autoFocus
+                className="h-9 px-3 surface-highest rounded-xl text-sm font-body focus:outline-none focus:ring-1 focus:ring-primary w-28 sm:w-44" />
+              <button onClick={handleSave} className="h-9 px-3 sm:px-4 bg-primary text-primary-foreground rounded-xl text-sm font-display font-bold shrink-0">Save</button>
+              <button onClick={() => setShowSaveInput(false)} className="h-9 px-2 text-muted-foreground text-sm shrink-0">✕</button>
             </div>
           ) : (
-            <button onClick={() => setShowSaveInput(true)} className="h-9 px-5 bg-primary text-primary-foreground rounded-xl text-sm font-display font-bold flex items-center gap-2 btn-bubble"><Save className="size-3.5" /> Save</button>
+            <button onClick={() => setShowSaveInput(true)} className="h-9 px-4 sm:px-5 bg-primary text-primary-foreground rounded-xl text-sm font-display font-bold flex items-center gap-1.5 sm:gap-2 btn-bubble shrink-0"><Save className="size-3.5" /><span className="hidden sm:inline">Save</span></button>
           )}
         </div>
       </div>
@@ -143,13 +143,13 @@ export default function TimetableView() {
       )}
 
       {/* View mode */}
-      <div className="no-print flex flex-wrap items-center gap-2 mb-6">
-        <span className="label-system text-muted-foreground mr-1">View:</span>
+      <div className="no-print flex flex-wrap items-center gap-1.5 sm:gap-2 mb-4 sm:mb-6">
+        <span className="label-system text-muted-foreground mr-1 hidden sm:inline">View:</span>
         {VIEW_MODES.map(({ key, label, icon: Icon }) => (
           <button key={key} onClick={() => handleViewModeChange(key)}
-            className={cn('flex items-center gap-2 px-4 py-2 rounded-xl text-sm font-display font-semibold transition-all',
+            className={cn('flex items-center gap-1.5 sm:gap-2 px-3 sm:px-4 py-2 rounded-xl text-xs sm:text-sm font-display font-semibold transition-all',
               viewMode === key ? 'bg-primary/15 text-primary glow-primary' : 'surface-high text-muted-foreground hover:text-foreground')}>
-            <Icon className="size-3.5" /> {label}
+            <Icon className="size-3.5" /> <span className="hidden sm:inline">{label}</span>
           </button>
         ))}
       </div>

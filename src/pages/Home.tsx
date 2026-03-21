@@ -42,7 +42,7 @@ export default function Home() {
 
       {/* Hero */}
       <section className="relative min-h-[80vh] flex items-center overflow-hidden">
-        <div className="w-full px-6 lg:px-12 xl:px-20 py-20">
+        <div className="w-full px-4 sm:px-6 lg:px-12 xl:px-20 py-12 sm:py-20">
           <div className="grid lg:grid-cols-12 gap-12 items-center">
             <div className={cn('lg:col-span-7 transition-all duration-700', mounted ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-10')}>
               <div className="inline-flex items-center gap-2 px-3 py-1.5 rounded-lg bg-primary/10 text-primary label-system mb-6">
@@ -57,13 +57,13 @@ export default function Home() {
                 Input branches, subjects, and constraints. TimeForge handles the rest with AI precision. Kinetic scheduling for high-performance institutions.
               </p>
 
-              <div className="flex flex-wrap gap-4">
+              <div className="flex flex-wrap gap-3 sm:gap-4">
                 <Link to="/generator"
-                  className="inline-flex items-center gap-2 px-8 py-4 bg-primary text-primary-foreground font-display font-bold text-sm rounded-xl btn-bubble">
+                  className="inline-flex items-center gap-2 px-6 sm:px-8 py-3 sm:py-4 bg-primary text-primary-foreground font-display font-bold text-sm rounded-xl btn-bubble">
                   Start Generating <Sparkles className="size-4" />
                 </Link>
                 <Link to="/saved"
-                  className="inline-flex items-center gap-2 px-8 py-4 surface-high font-display font-medium text-sm rounded-xl transition-all hover:scale-[1.02] active:scale-[0.98]">
+                  className="inline-flex items-center gap-2 px-6 sm:px-8 py-3 sm:py-4 surface-high font-display font-medium text-sm rounded-xl transition-all hover:scale-[1.02] active:scale-[0.98]">
                   View Saved
                 </Link>
               </div>
