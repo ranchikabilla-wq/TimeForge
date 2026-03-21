@@ -1,5 +1,6 @@
-import { lazy, Suspense } from 'react';
+import { lazy, Suspense, useEffect, useState } from 'react';
 import { Routes, Route, Navigate, useLocation } from 'react-router-dom';
+import { supabase } from '@/supabaseClient';
 import Header from '@/components/layout/Header';
 import ToastContainer from '@/components/layout/ToastContainer';
 
@@ -22,7 +23,29 @@ function LoadingFallback() {
 }
 
 function ProtectedRoute({ children }: { children: React.ReactNode }) {
-  const isAuth = localStorage.getItem('timeforge-auth') === 'true';
+  const [isLoading, setIsLoading] = useState(true);
+  const [isAuth, setIsAuth] = useState(false);
+
+  useEffect(() => {
+    async function checkSession() {
+      const { data: { session } } = await supabase.auth.getSession();
+      setIsAuth(!!session);
+      setIsLoading(false);
+    }
+    checkSession();
+  }, []);
+
+  if (isLoading) {
+    return (
+      <div className="flex items-center justify-center min-h-[60vh]">
+        <div className="flex flex-col items-center gap-4">
+          <div className="size-10 border-2 border-primary border-t-transparent rounded-full animate-spin" />
+          <span className="text-muted-foreground text-sm font-body">Verifying session...</span>
+        </div>
+      </div>
+    );
+  }
+
   if (!isAuth) return <Navigate to="/login" replace />;
   return <>{children}</>;
 }

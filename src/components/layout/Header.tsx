@@ -2,6 +2,7 @@ import { Link, useLocation, useNavigate } from 'react-router-dom';
 import { Sparkles, LayoutGrid, Save, Sun, Moon, LogOut } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { useThemeStore } from '@/stores/themeStore';
+import { supabase } from '@/supabaseClient';
 
 const NAV_ITEMS = [
   { to: '/home', label: 'Home' },
@@ -14,7 +15,8 @@ export default function Header() {
   const navigate = useNavigate();
   const { theme, toggleTheme } = useThemeStore();
 
-  function handleLogout() {
+  async function handleLogout() {
+    await supabase.auth.signOut();
     localStorage.removeItem('timeforge-auth');
     navigate('/login');
   }

@@ -30,7 +30,7 @@ export default function LoginPage() {
     setIsLoading(true);
     setError('');
 
-    const { error: signInError } = await supabase.auth.signInWithPassword({
+    const { error: signInError, data } = await supabase.auth.signInWithPassword({
       email,
       password,
     });
@@ -38,10 +38,13 @@ export default function LoginPage() {
     if (signInError) {
       setError(signInError.message);
       setIsLoading(false);
-    } else {
+    } else if (data.session) {
       localStorage.setItem('timeforge-auth', 'true');
       setIsLoading(false);
       navigate('/home');
+    } else {
+      setError('Login failed. Please try again.');
+      setIsLoading(false);
     }
   }, [email, password, navigate]);
 
@@ -50,7 +53,7 @@ export default function LoginPage() {
     setIsLoading(true);
     setError('');
 
-    const { error: signUpError } = await supabase.auth.signUp({
+    const { error: signUpError, data } = await supabase.auth.signUp({
       email,
       password,
     });
@@ -58,10 +61,15 @@ export default function LoginPage() {
     if (signUpError) {
       setError(signUpError.message);
       setIsLoading(false);
-    } else {
+    } else if (data.session) {
+      // User signed up and session was created (email confirmation disabled)
       localStorage.setItem('timeforge-auth', 'true');
       setIsLoading(false);
       navigate('/home');
+    } else {
+      // Email confirmation required
+      setError('Check your email and confirm your account before logging in.');
+      setIsLoading(false);
     }
   }, [email, password, navigate]);
 
