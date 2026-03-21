@@ -1,7 +1,7 @@
 import { useState, useEffect, useCallback } from 'react';
-import { useNavigate } from 'react-router-dom';
+import { useNavigate, useSearchParams } from 'react-router-dom';
 import { cn } from '@/lib/utils';
-import { Sparkles, LogIn, Eye, EyeOff, Mail, Lock, UserPlus } from 'lucide-react';
+import { Sparkles, LogIn, Eye, EyeOff, Mail, Lock, UserPlus, CheckCircle } from 'lucide-react';
 import { supabase } from '@/supabaseClient';
 
 function generateOrbs(count: number) {
@@ -14,6 +14,7 @@ function generateOrbs(count: number) {
 
 export default function LoginPage() {
   const navigate = useNavigate();
+  const [searchParams] = useSearchParams();
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [showPassword, setShowPassword] = useState(false);
@@ -22,6 +23,16 @@ export default function LoginPage() {
   const [mounted, setMounted] = useState(false);
   const [isSignUp, setIsSignUp] = useState(false);
   const [error, setError] = useState('');
+  const [success, setSuccess] = useState('');
+
+  // Pre-fill email from query parameter when on Sign In page
+  useEffect(() => {
+    const emailParam = searchParams.get('email');
+    if (emailParam) {
+      setEmail(emailParam);
+      setSuccess('Your account has been created. Please check your email and verify your address before logging in.');
+    }
+  }, [searchParams]);
 
   useEffect(() => { const t = setTimeout(() => setMounted(true), 50); return () => clearTimeout(t); }, []);
 
@@ -67,9 +78,9 @@ export default function LoginPage() {
       setIsLoading(false);
       navigate('/home');
     } else {
-      // Email confirmation required
-      setError('Check your email and confirm your account before logging in.');
+      // Email confirmation required - redirect to Sign In with email pre-filled
       setIsLoading(false);
+      navigate(`/login?email=${encodeURIComponent(email)}`);
     }
   }, [email, password, navigate]);
 
@@ -141,6 +152,13 @@ export default function LoginPage() {
               </div>
             </div>
 
+            {success && (
+              <p className="text-sm text-green-500 bg-green-500/10 p-3 rounded flex items-start gap-2">
+                <CheckCircle className="size-4 mt-0.5 flex-shrink-0" />
+                {success}
+              </p>
+            )}
+
             {error && (
               <p className="text-sm text-red-500 bg-red-500/10 p-2 rounded">{error}</p>
             )}
@@ -152,7 +170,7 @@ export default function LoginPage() {
           </form>
 
           <div className="mt-4 text-center">
-            <button type="button" onClick={() => { setIsSignUp(!isSignUp); setError(''); }} className="label-system text-primary hover:underline">
+            <button type="button" onClick={() => { setIsSignUp(!isSignUp); setError(''); setSuccess(''); }} className="label-system text-primary hover:underline">
               {isSignUp ? 'Already have an account? Sign In' : "Don't have an account? Sign Up"}
             </button>
           </div>
