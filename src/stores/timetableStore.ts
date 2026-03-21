@@ -13,6 +13,12 @@ import type {
 import { DEFAULT_CONFIG } from '@/constants/config';
 import { generateTimetables } from '@/lib/generator';
 import { generateId } from '@/lib/utils';
+import {
+  loadTimetables,
+  createTimetable,
+  deleteTimetable as deleteTimetableDB,
+  subscribeTimetables,
+} from '@/lib/supabaseOperations';
 
 type GridSnapshot = Record<string, (TimetableCell | null)[][]>;
 
@@ -33,6 +39,7 @@ interface TimetableStore {
   hasGenerated: boolean;
   savedTimetables: SavedTimetable[];
   subjectColors: Record<string, string>;
+  isLoadingSaved: boolean;
 
   undoStack: GridSnapshot[];
   redoStack: GridSnapshot[];
@@ -59,9 +66,10 @@ interface TimetableStore {
   removeConfirmedClass: (id: string) => void;
   setSubjectColor: (subjectName: string, color: string) => void;
   generate: () => void;
-  saveCurrent: (name: string) => void;
+  saveCurrent: (name: string) => Promise<void>;
   loadSaved: (id: string) => void;
-  deleteSaved: (id: string) => void;
+  deleteSaved: (id: string) => Promise<void>;
+  fetchSavedTimetables: () => Promise<void>;
   resetWizard: () => void;
   swapCells: (
     branchId: string,
@@ -91,6 +99,7 @@ export const useTimetableStore = create<TimetableStore>()(
       hasGenerated: false,
       savedTimetables: [],
       subjectColors: {},
+      isLoadingSaved: false,
 
       undoStack: [],
       redoStack: [],
@@ -222,12 +231,10 @@ export const useTimetableStore = create<TimetableStore>()(
         });
       },
 
-      saveCurrent: (name) => {
+      saveCurrent: async (name) => {
         const s = get();
-        const saved: SavedTimetable = {
-          id: generateId(),
+        const timetableData = {
           name,
-          createdAt: new Date().toISOString(),
           config: s.generalConfig,
           branches: s.branches,
           subjects: s.subjects,
@@ -238,9 +245,18 @@ export const useTimetableStore = create<TimetableStore>()(
           warnings: s.generationWarnings,
           subjectColors: s.subjectColors,
         };
-        set((state) => ({
-          savedTimetables: [saved, ...state.savedTimetables],
-        }));
+
+        // Save to Supabase
+        const saved = await createTimetable(timetableData);
+        
+        if (saved) {
+          // Update local state with the saved timetable
+          set((state) => ({
+            savedTimetables: [saved, ...state.savedTimetables],
+          }));
+        } else {
+          console.error('Failed to save timetable to Supabase');
+        }
       },
 
       loadSaved: (id) => {
@@ -264,10 +280,30 @@ export const useTimetableStore = create<TimetableStore>()(
         });
       },
 
-      deleteSaved: (id) =>
-        set((s) => ({
-          savedTimetables: s.savedTimetables.filter((st) => st.id !== id),
-        })),
+      deleteSaved: async (id) => {
+        // Delete from Supabase
+        const success = await deleteTimetableDB(id);
+        
+        if (success) {
+          // Update local state
+          set((s) => ({
+            savedTimetables: s.savedTimetables.filter((st) => st.id !== id),
+          }));
+        } else {
+          console.error('Failed to delete timetable from Supabase');
+        }
+      },
+
+      fetchSavedTimetables: async () => {
+        set({ isLoadingSaved: true });
+        try {
+          const timetables = await loadTimetables();
+          set({ savedTimetables: timetables, isLoadingSaved: false });
+        } catch (error) {
+          console.error('Failed to fetch saved timetables:', error);
+          set({ isLoadingSaved: false });
+        }
+      },
 
       resetWizard: () =>
         set({

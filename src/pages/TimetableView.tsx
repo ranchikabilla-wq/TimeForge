@@ -73,7 +73,13 @@ export default function TimetableView() {
   const currentBranch = branches.find((b) => b.id === activeBranch);
 
   function handleRegenerate() { generate(); generateSound.currentTime = 0; generateSound.play().catch(() => {}); toast({ title: 'Timetable re-forged! Confirmed classes preserved.', variant: 'success' }); }
-  function handleSave() { const name = saveName.trim() || `Timetable — ${new Date().toLocaleDateString()}`; saveCurrent(name); setShowSaveInput(false); setSaveName(''); toast({ title: `Saved as "${name}"`, variant: 'success' }); }
+  async function handleSave() { 
+    const name = saveName.trim() || `Timetable — ${new Date().toLocaleDateString()}`; 
+    await saveCurrent(name); 
+    setShowSaveInput(false); 
+    setSaveName(''); 
+    toast({ title: `Saved as "${name}"`, variant: 'success' }); 
+  }
   function handleExportPDF() { exportPDF(); setShowExportMenu(false); }
   function handleExportExcel() { exportExcel(generatedTimetables, branches, generalConfig); toast({ title: 'Excel exported!', variant: 'success' }); setShowExportMenu(false); }
   function handleSwap(day1: number, period1: number, day2: number, period2: number) { swapCells(activeBranch, day1, period1, day2, period2); toast({ title: 'Cells swapped', variant: 'success' }); }

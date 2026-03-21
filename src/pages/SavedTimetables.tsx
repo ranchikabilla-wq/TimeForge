@@ -1,3 +1,4 @@
+import { useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useTimetableStore } from '@/stores/timetableStore';
 import { toast } from '@/stores/toastStore';
@@ -5,10 +6,30 @@ import { Calendar, GitBranch, Clock, Trash2, Eye, BookOpen, Pin } from 'lucide-r
 
 export default function SavedTimetables() {
   const navigate = useNavigate();
-  const { savedTimetables, loadSaved, deleteSaved } = useTimetableStore();
+  const { savedTimetables, loadSaved, deleteSaved, fetchSavedTimetables, isLoadingSaved } = useTimetableStore();
+
+  // Fetch saved timetables from Supabase on mount
+  useEffect(() => {
+    fetchSavedTimetables();
+  }, [fetchSavedTimetables]);
 
   function handleLoad(id: string) { loadSaved(id); toast({ title: 'Timetable loaded', variant: 'success' }); navigate('/timetable'); }
-  function handleDelete(id: string, name: string) { deleteSaved(id); toast({ title: `Deleted "${name}"`, variant: 'default' }); }
+  async function handleDelete(id: string, name: string) { 
+    await deleteSaved(id); 
+    toast({ title: `Deleted "${name}"`, variant: 'default' }); 
+  }
+
+  if (isLoadingSaved) {
+    return (
+      <div className="flex flex-col items-center justify-center min-h-[60vh] px-4">
+        <div className="size-20 rounded-2xl surface-high flex items-center justify-center mb-6">
+          <Calendar className="size-9 text-muted-foreground/30 animate-pulse" />
+        </div>
+        <h2 className="font-display font-bold text-xl mb-2">Loading Timetables...</h2>
+        <p className="text-muted-foreground text-sm text-center max-w-md">Fetching your saved timetables from the cloud.</p>
+      </div>
+    );
+  }
 
   if (savedTimetables.length === 0) {
     return (
