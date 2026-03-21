@@ -8,7 +8,7 @@ const SUPABASE_URL = "https://ijitakhmyyizzllwbxma.supabase.co";
 // TODO: Replace with your Supabase Public (anon) key
 // This should be the "anon" key from your Supabase project settings
 // It typically starts with "eyJ..." and is much longer
-const SUPABASE_PUBLIC_KEY = "YOUR_SUPABASE_ANON_KEY_HERE";
+const SUPABASE_PUBLIC_KEY = "sb_publishable_PCle_2S-PFza0jcVBEqebQ_DsHCZpku";
   
 // Create and export the Supabase client
 // =====================================
