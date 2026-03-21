@@ -1,7 +1,8 @@
 import { useState, useEffect, useCallback } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { cn } from '@/lib/utils';
-import { Sparkles, LogIn, Eye, EyeOff, Mail, Lock } from 'lucide-react';
+import { Sparkles, LogIn, Eye, EyeOff, Mail, Lock, UserPlus } from 'lucide-react';
+import { supabase } from '@/supabaseClient';
 
 function generateOrbs(count: number) {
   const colors = ['rgba(95, 255, 247, 0.12)', 'rgba(252, 216, 70, 0.08)', 'rgba(124, 58, 237, 0.06)', 'rgba(14, 165, 233, 0.08)'];
@@ -19,14 +20,52 @@ export default function LoginPage() {
   const [isLoading, setIsLoading] = useState(false);
   const [orbs] = useState(() => generateOrbs(5));
   const [mounted, setMounted] = useState(false);
+  const [isSignUp, setIsSignUp] = useState(false);
+  const [error, setError] = useState('');
 
   useEffect(() => { const t = setTimeout(() => setMounted(true), 50); return () => clearTimeout(t); }, []);
 
-  const handleLogin = useCallback((e: React.FormEvent) => {
+  const handleLogin = useCallback(async (e: React.FormEvent) => {
     e.preventDefault();
     setIsLoading(true);
-    setTimeout(() => { localStorage.setItem('timeforge-auth', 'true'); navigate('/home'); }, 800);
-  }, [navigate]);
+    setError('');
+
+    const { error: signInError } = await supabase.auth.signInWithPassword({
+      email,
+      password,
+    });
+
+    if (signInError) {
+      setError(signInError.message);
+      setIsLoading(false);
+    } else {
+      localStorage.setItem('timeforge-auth', 'true');
+      setIsLoading(false);
+      navigate('/home');
+    }
+  }, [email, password, navigate]);
+
+  const handleSignUp = useCallback(async (e: React.FormEvent) => {
+    e.preventDefault();
+    setIsLoading(true);
+    setError('');
+
+    const { error: signUpError } = await supabase.auth.signUp({
+      email,
+      password,
+    });
+
+    if (signUpError) {
+      setError(signUpError.message);
+      setIsLoading(false);
+    } else {
+      localStorage.setItem('timeforge-auth', 'true');
+      setIsLoading(false);
+      navigate('/home');
+    }
+  }, [email, password, navigate]);
+
+  const handleSubmit = isSignUp ? handleSignUp : handleLogin;
 
   return (
     <div className="min-h-screen flex items-center justify-center relative overflow-hidden bg-background">
@@ -64,10 +103,10 @@ export default function LoginPage() {
             <div className="size-2 rounded-full bg-muted-foreground/40" />
           </div>
 
-          <h2 className="font-display font-bold text-xl mb-1">Sign In</h2>
-          <p className="text-sm text-muted-foreground mb-6">Access your forging environment.</p>
+          <h2 className="font-display font-bold text-xl mb-1">{isSignUp ? 'Sign Up' : 'Sign In'}</h2>
+          <p className="text-sm text-muted-foreground mb-6">{isSignUp ? 'Create your forging environment.' : 'Access your forging environment.'}</p>
 
-          <form onSubmit={handleLogin} className="space-y-5">
+          <form onSubmit={handleSubmit} className="space-y-5">
             <div>
               <div className="flex items-center justify-between mb-2">
                 <span className="label-system text-muted-foreground">Email Address</span>
@@ -82,11 +121,11 @@ export default function LoginPage() {
             <div>
               <div className="flex items-center justify-between mb-2">
                 <span className="label-system text-muted-foreground">Password</span>
-                <button type="button" className="label-system text-primary hover:underline">Forgot Access?</button>
+                {!isSignUp && <button type="button" className="label-system text-primary hover:underline">Forgot Access?</button>}
               </div>
               <div className="relative">
                 <Lock className="absolute left-4 top-1/2 -translate-y-1/2 size-4 text-muted-foreground/50" />
-                <input type={showPassword ? 'text' : 'password'} value={password} onChange={(e) => setPassword(e.target.value)} placeholder="••••••••••" required
+                <input type={showPassword ? 'text' : 'password'} value={password} onChange={(e) => setPassword(e.target.value)} placeholder="••••••••••" required minLength={6}
                   className="w-full h-12 pl-11 pr-11 surface-highest rounded-xl text-sm font-body border-0 border-b-2 border-transparent focus:border-primary focus:outline-none transition-all" />
                 <button type="button" onClick={() => setShowPassword(!showPassword)} className="absolute right-4 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground transition-colors">
                   {showPassword ? <EyeOff className="size-4" /> : <Eye className="size-4" />}
@@ -94,11 +133,21 @@ export default function LoginPage() {
               </div>
             </div>
 
+            {error && (
+              <p className="text-sm text-red-500 bg-red-500/10 p-2 rounded">{error}</p>
+            )}
+
             <button type="submit" disabled={isLoading}
               className="w-full h-12 bg-primary text-primary-foreground rounded-xl text-sm font-display font-bold flex items-center justify-center gap-2 btn-bubble disabled:opacity-60">
-              {isLoading ? <div className="size-5 border-2 border-primary-foreground border-t-transparent rounded-full animate-spin" /> : <><span>Sign In</span><LogIn className="size-4" /></>}
+              {isLoading ? <div className="size-5 border-2 border-primary-foreground border-t-transparent rounded-full animate-spin" /> : <><span>{isSignUp ? 'Sign Up' : 'Sign In'}</span>{isSignUp ? <UserPlus className="size-4" /> : <LogIn className="size-4" />}</>}
             </button>
           </form>
+
+          <div className="mt-4 text-center">
+            <button type="button" onClick={() => { setIsSignUp(!isSignUp); setError(''); }} className="label-system text-primary hover:underline">
+              {isSignUp ? 'Already have an account? Sign In' : "Don't have an account? Sign Up"}
+            </button>
+          </div>
         </div>
 
         <div className="text-center mt-4">
