@@ -167,6 +167,7 @@ export default function LoginPage() {
             <div>
               <div className="flex items-center justify-between mb-2">
                 <span className="label-system text-muted-foreground">Password</span>
+<<<<<<< HEAD
                 {!isSignUp && <button type="button" onClick={() => navigate('/forgot-password')} className="label-system text-primary hover:underline">Forgot Access?</button>}
               </div>
               <div className="relative">
