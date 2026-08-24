@@ -1,6 +1,9 @@
-import { useMemo } from 'react';
+import { useMemo, useState } from 'react';
 import type { TimetableCell, GeneralConfig, Branch } from '@/types';
 import { parseTime, formatTime, cn } from '@/lib/utils';
+import EditClassDialog from './EditClassDialog';
+import AssignSubjectDialog from './AssignSubjectDialog';
+import { useTimetableStore } from '@/stores/timetableStore';
 import { CELL_COLOR_MAP, getSubjectColorIndex } from '@/constants/config';
 import { FlaskConical, Users, AlertTriangle, CheckCircle2, Pin } from 'lucide-react';
 
@@ -8,6 +11,17 @@ interface AllDepartmentsViewProps {
   timetables: Record<string, (TimetableCell | null)[][]>;
   branches: Branch[];
   config: GeneralConfig;
+
+  enableDrag?: boolean;
+
+  onSwap?: (
+    sourceBranchId: string,
+    sourceDay: number,
+    sourcePeriod: number,
+    targetBranchId: string,
+    targetDay: number,
+    targetPeriod: number
+  ) => void;
 }
 
 function calculateTimeSlots(config: GeneralConfig) {
@@ -22,11 +36,162 @@ function calculateTimeSlots(config: GeneralConfig) {
   return slots;
 }
 
-export default function AllDepartmentsView({ timetables, branches, config }: AllDepartmentsViewProps) {
+export default function AllDepartmentsView({
+  timetables,
+  branches,
+  config,
+  enableDrag = false,
+  onSwap,
+}: AllDepartmentsViewProps) {
   const numDays = config.workingDays.length;
   const numPeriods = config.periodsPerDay;
   const timeSlots = calculateTimeSlots(config);
+  const updateClass = useTimetableStore((s) => s.updateClass);
+  const assignSubject = useTimetableStore((s) => s.assignSubject);
+  const getRemainingSubjects = useTimetableStore((s) => s.getRemainingSubjects);
+const [editing, setEditing] = useState<{
+  branchId: string;
+  day: number;
+  period: number;
+  cell: TimetableCell;
+} | null>(null);
 
+const [assigning, setAssigning] = useState<{
+  branchId: string;
+  day: number;
+  period: number;
+} | null>(null);
+
+
+
+const [dragSource, setDragSource] = useState<{
+  branchId: string;
+  day: number;
+  period: number;
+} | null>(null);
+
+
+
+const [dragOver, setDragOver] = useState<{
+  branchId: string;
+  day: number;
+  period: number;
+} | null>(null);
+const handleDragStart = (
+  branchId: string,
+  day: number,
+  period: number,
+  e: React.DragEvent
+) => {
+  const cell = timetables[branchId]?.[day]?.[period];
+
+  if (!enableDrag || !cell || cell.isConfirmed || cell.isLabContinuation) {
+    e.preventDefault();
+    return;
+  }
+
+  setDragSource({
+    branchId,
+    day,
+    period,
+  });
+
+  e.dataTransfer.effectAllowed = 'move';
+};
+
+const handleDragOver = (
+  branchId: string,
+  day: number,
+  period: number,
+  e: React.DragEvent
+) => {
+  if (!enableDrag || !dragSource) return;
+
+  e.preventDefault();
+
+  setDragOver({
+    branchId,
+    day,
+    period,
+  });
+
+  e.dataTransfer.dropEffect = 'move';
+};
+
+const handleDrop = (
+  branchId: string,
+  day: number,
+  period: number,
+  e: React.DragEvent
+) => {
+  e.preventDefault();
+
+  if (!enableDrag || !dragSource || !onSwap) {
+    setDragSource(null);
+    setDragOver(null);
+    return;
+  }
+
+  if (
+    dragSource.branchId === branchId &&
+    dragSource.day === day &&
+    dragSource.period === period
+  ) {
+    setDragSource(null);
+    setDragOver(null);
+    return;
+  }
+
+  const targetCell = timetables[branchId]?.[day]?.[period];
+
+  if (targetCell?.isConfirmed) {
+    setDragSource(null);
+    setDragOver(null);
+    return;
+  }
+
+  onSwap(
+    dragSource.branchId,
+    dragSource.day,
+    dragSource.period,
+    branchId,
+    day,
+    period
+  );
+
+  setDragSource(null);
+  setDragOver(null);
+};
+
+const handleDragEnd = () => {
+  setDragSource(null);
+  setDragOver(null);
+};
+const handleCellDoubleClick = (
+  branchId: string,
+  day: number,
+  period: number,
+  cell: TimetableCell | null
+) => {
+  if (cell) {
+    if (cell.isConfirmed || cell.isLabContinuation) return;
+
+    setEditing({
+      branchId,
+      day,
+      period,
+      cell,
+    });
+
+    return;
+  }
+
+  setAssigning({
+    branchId,
+    day,
+    period,
+  });
+};
   const collisions = useMemo(() => {
     const issues: string[] = [];
     const teacherSlots: Record<string, { branch: string; subject: string }[]> = {};
@@ -58,7 +223,15 @@ export default function AllDepartmentsView({ timetables, branches, config }: All
     const colorIdx = getSubjectColorIndex(cell.subjectName);
     const color = CELL_COLOR_MAP[colorIdx] ?? CELL_COLOR_MAP[0];
     return (
-      <div className={cn('flex items-center gap-0.5 px-1.5 py-0.5 rounded-lg border-l-2', color.bg, color.border, cell.isConfirmed && 'ring-1 ring-emerald-500/30')}>
+      <div
+  className={cn(
+    'flex items-center gap-0.5 px-1.5 py-0.5 rounded-lg border-l-2',
+    color.bg,
+    color.border,
+    cell.isConfirmed && 'ring-1 ring-emerald-500/30',
+    !cell.isConfirmed && 'cursor-grab'
+  )}
+>
         {cell.isConfirmed && <Pin className="size-2 text-emerald-400 shrink-0" />}
         <span className={cn('text-[9px] font-display font-bold truncate', color.text)}>{cell.subjectShortName}</span>
         {cell.isLab && <FlaskConical className="size-2 text-secondary shrink-0" />}
@@ -107,15 +280,109 @@ export default function AllDepartmentsView({ timetables, branches, config }: All
                     const cell = timetables[branch.id]?.[d]?.[p] ?? null;
                     if (cell?.isLabContinuation) return cols.length > 0 ? cols : null;
                     if (cell?.isLab && !cell.isLabContinuation) {
-                      cols.push(<td key={`${d}-${branch.id}-${p}`} colSpan={2} className="p-0.5 align-middle surface-low">{renderMiniCell(cell)}<div className="text-[8px] text-muted-foreground px-1.5 truncate">{cell.teacherName}</div></td>);
-                      return cols;
-                    }
-                    if (cell) {
-                      cols.push(<td key={`${d}-${branch.id}-${p}`} className="p-0.5 align-middle surface-low">{renderMiniCell(cell)}<div className="text-[8px] text-muted-foreground px-1.5 truncate">{cell.teacherName}</div></td>);
-                      return cols;
-                    }
-                    cols.push(<td key={`${d}-${branch.id}-${p}`} className="p-0.5 align-middle surface-low"><div className="min-h-[28px] flex items-center justify-center"><span className="text-[9px] text-muted-foreground/20">—</span></div></td>);
-                    return cols;
+  cols.push(
+    <td
+      key={`${d}-${branch.id}-${p}`}
+      colSpan={2}
+      className={cn(
+        'p-0.5 align-middle surface-low',
+        dragOver?.branchId === branch.id &&
+          dragOver?.day === d &&
+          dragOver?.period === p &&
+          'ring-2 ring-primary'
+      )}
+      draggable={enableDrag && !cell.isConfirmed}
+      onDragStart={(e) =>
+        handleDragStart(branch.id, d, p, e)
+      }
+      onDragOver={(e) =>
+        handleDragOver(branch.id, d, p, e)
+      }
+      onDrop={(e) =>
+        handleDrop(branch.id, d, p, e)
+      }
+      onDragEnd={handleDragEnd}
+      onDoubleClick={() =>
+        handleCellDoubleClick(branch.id, d, p, cell)
+      }
+    >
+      {renderMiniCell(cell)}
+
+      <div className="text-[8px] text-muted-foreground px-1.5 truncate">
+        {cell.teacherName}
+      </div>
+    </td>
+  );
+
+  return cols;
+}
+
+if (cell) {
+  cols.push(
+    <td
+      key={`${d}-${branch.id}-${p}`}
+      className={cn(
+        'p-0.5 align-middle surface-low',
+        dragOver?.branchId === branch.id &&
+          dragOver?.day === d &&
+          dragOver?.period === p &&
+          'ring-2 ring-primary'
+      )}
+      draggable={enableDrag && !cell.isConfirmed}
+      onDragStart={(e) =>
+        handleDragStart(branch.id, d, p, e)
+      }
+      onDragOver={(e) =>
+        handleDragOver(branch.id, d, p, e)
+      }
+      onDrop={(e) =>
+        handleDrop(branch.id, d, p, e)
+      }
+      onDragEnd={handleDragEnd}
+      onDoubleClick={() =>
+        handleCellDoubleClick(branch.id, d, p, cell)
+      }
+    >
+      {renderMiniCell(cell)}
+
+      <div className="text-[8px] text-muted-foreground px-1.5 truncate">
+        {cell.teacherName}
+      </div>
+    </td>
+  );
+
+  return cols;
+}
+
+cols.push(
+  <td
+    key={`${d}-${branch.id}-${p}`}
+    className={cn(
+      'p-0.5 align-middle surface-low',
+      dragOver?.branchId === branch.id &&
+        dragOver?.day === d &&
+        dragOver?.period === p &&
+        'ring-2 ring-primary'
+    )}
+    onDragOver={(e) =>
+      handleDragOver(branch.id, d, p, e)
+    }
+    onDrop={(e) =>
+      handleDrop(branch.id, d, p, e)
+    }
+    onDoubleClick={() =>
+      handleCellDoubleClick(branch.id, d, p, null)
+    }
+  >
+    <div className="min-h-[28px] flex items-center justify-center">
+      <span className="text-[9px] text-muted-foreground/20">
+        —
+      </span>
+    </div>
+  </td>
+);
+
+return cols;
                   })}
                 </tr>
               ))

@@ -73,12 +73,13 @@ interface TimetableStore {
   fetchSavedTimetables: () => Promise<void>;
   resetWizard: () => void;
   swapCells: (
-    branchId: string,
-    day1: number,
-    period1: number,
-    day2: number,
-    period2: number
-  ) => void;
+  sourceBranchId: string,
+  day1: number,
+  period1: number,
+  day2: number,
+  period2: number,
+  targetBranchId?: string
+) => void;
   updateTimetables: (timetables: GridSnapshot) => void;
   updateClass: (branchId: string,day: number,period: number,updates: Partial<TimetableCell>,duration: 1 | 2) => void;
   editInputs: () => void;
@@ -335,63 +336,266 @@ export const useTimetableStore = create<TimetableStore>()(
         set({ currentStep: 0 });
       },
 
-      swapCells: (branchId, day1, period1, day2, period2) => {
-        const state = get();
-        const grid = state.generatedTimetables[branchId];
-        if (!grid) return;
-        const cellA = grid[day1]?.[period1] ?? null;
-        const cellB = grid[day2]?.[period2] ?? null;
-        if (cellA?.isConfirmed || cellB?.isConfirmed) return;
+      swapCells: (
+  sourceBranchId,
+  day1,
+  period1,
+  day2,
+  period2,
+  targetBranchId = sourceBranchId
+) => {
+  const state = get();
 
-        state.pushHistory();
+  const sourceGrid = state.generatedTimetables[sourceBranchId];
+  const targetGrid = state.generatedTimetables[targetBranchId];
 
-        const grids = cloneGrids(state.generatedTimetables);
-        const g = grids[branchId];
-        if (!g) return;
+  if (!sourceGrid || !targetGrid) return;
 
-        const cA = g[day1]?.[period1] ?? null;
-        const cB = g[day2]?.[period2] ?? null;
-        const isLabStartA = cA && cA.isLab && !cA.isLabContinuation;
-        const isLabStartB = cB && cB.isLab && !cB.isLabContinuation;
-        const isLabContA = cA?.isLabContinuation;
-        const isLabContB = cB?.isLabContinuation;
+  const cellA = sourceGrid[day1]?.[period1] ?? null;
+  const cellB = targetGrid[day2]?.[period2] ?? null;
 
-        if (isLabContA || isLabContB) return;
+  // Confirmed classes cannot be moved.
+  if (cellA?.isConfirmed || cellB?.isConfirmed) return;
 
-        if (!isLabStartA && !isLabStartB) {
-          g[day1][period1] = cB;
-          g[day2][period2] = cA;
-        } else if (isLabStartA && !isLabStartB) {
-          const numPeriods = state.generalConfig.periodsPerDay;
-          if (period2 + 1 >= numPeriods) return;
-          const cellBelow = g[day2]?.[period2 + 1] ?? null;
-          if (cellBelow && !cellBelow.isLabContinuation) return;
-          g[day1][period1] = cB;
-          g[day1][period1 + 1] = null;
-          g[day2][period2] = cA;
-          g[day2][period2 + 1] = { ...cA!, isLabContinuation: true };
-        } else if (!isLabStartA && isLabStartB) {
-          const numPeriods = state.generalConfig.periodsPerDay;
-          if (period1 + 1 >= numPeriods) return;
-          const cellBelow = g[day1]?.[period1 + 1] ?? null;
-          if (cellBelow && !cellBelow.isLabContinuation) return;
-          g[day2][period2] = cA;
-          g[day2][period2 + 1] = null;
-          g[day1][period1] = cB;
-          g[day1][period1 + 1] = { ...cB!, isLabContinuation: true };
-        } else {
-          const numPeriods = state.generalConfig.periodsPerDay;
-          if (period1 + 1 >= numPeriods || period2 + 1 >= numPeriods) return;
-          const contA = g[day1][period1 + 1];
-          const contB = g[day2][period2 + 1];
-          g[day1][period1] = cB;
-          g[day1][period1 + 1] = contB;
-          g[day2][period2] = cA;
-          g[day2][period2 + 1] = contA;
+  // Never start a drag from the continuation half of a lab.
+  if (cellA?.isLabContinuation || cellB?.isLabContinuation) return;
+
+  state.pushHistory();
+
+  const grids = cloneGrids(state.generatedTimetables);
+
+  const source = grids[sourceBranchId];
+  const target = grids[targetBranchId];
+
+  if (!source || !target) return;
+
+  const cA = source[day1]?.[period1] ?? null;
+  const cB = target[day2]?.[period2] ?? null;
+
+  const isLabStartA =
+    cA && cA.isLab && !cA.isLabContinuation;
+
+  const isLabStartB =
+    cB && cB.isLab && !cB.isLabContinuation;
+
+  /*
+   * Same branch
+   * -----------------------------------------
+   * Keep the existing lab-aware swapping logic.
+   */
+  if (sourceBranchId === targetBranchId) {
+    const g = source;
+
+    if (!isLabStartA && !isLabStartB) {
+      g[day1][period1] = cB;
+      g[day2][period2] = cA;
+    }
+
+    else if (isLabStartA && !isLabStartB) {
+      const numPeriods = state.generalConfig.periodsPerDay;
+
+      if (period2 + 1 >= numPeriods) return;
+
+      const cellBelow = g[day2]?.[period2 + 1] ?? null;
+
+      if (cellBelow && !cellBelow.isLabContinuation) return;
+
+      g[day1][period1] = cB;
+      g[day1][period1 + 1] = null;
+
+      g[day2][period2] = cA;
+      g[day2][period2 + 1] = {
+        ...cA!,
+        isLabContinuation: true,
+      };
+    }
+
+    else if (!isLabStartA && isLabStartB) {
+      const numPeriods = state.generalConfig.periodsPerDay;
+
+      if (period1 + 1 >= numPeriods) return;
+
+      const cellBelow = g[day1]?.[period1 + 1] ?? null;
+
+      if (cellBelow && !cellBelow.isLabContinuation) return;
+
+      g[day2][period2] = cA;
+      g[day2][period2 + 1] = null;
+
+      g[day1][period1] = cB;
+      g[day1][period1 + 1] = {
+        ...cB!,
+        isLabContinuation: true,
+      };
+    }
+
+    else {
+      const numPeriods = state.generalConfig.periodsPerDay;
+
+      if (
+        period1 + 1 >= numPeriods ||
+        period2 + 1 >= numPeriods
+      ) {
+        return;
+      }
+
+      const contA = g[day1][period1 + 1];
+      const contB = g[day2][period2 + 1];
+
+      g[day1][period1] = cB;
+      g[day1][period1 + 1] = contB;
+
+      g[day2][period2] = cA;
+      g[day2][period2 + 1] = contA;
+    }
+
+    set({ generatedTimetables: grids });
+    return;
+  }
+
+  /*
+   * CROSS-DEPARTMENT MOVE
+   * -----------------------------------------
+   *
+   * Example:
+   *
+   * CSE P1  --->  ECE P3
+   *
+   * We swap the actual cells between the
+   * two department grids.
+   */
+
+  // Do not allow moving a lab into an occupied
+  // continuation or vice versa.
+  if (
+    cA?.isLab &&
+    cB?.isLabContinuation
+  ) {
+    return;
+  }
+
+  if (
+    cB?.isLab &&
+    cA?.isLabContinuation
+  ) {
+    return;
+  }
+
+  /*
+   * Normal 1-period ↔ 1-period cross-department move
+   */
+  if (!isLabStartA && !isLabStartB) {
+    source[day1][period1] = cB
+      ? {
+          ...cB,
+          branchId: sourceBranchId,
+          branchShortName:
+            state.branches.find(
+              (b) => b.id === sourceBranchId
+            )?.shortName,
         }
+      : null;
 
-        set({ generatedTimetables: grids });
-      },
+    target[day2][period2] = cA
+      ? {
+          ...cA,
+          branchId: targetBranchId,
+          branchShortName:
+            state.branches.find(
+              (b) => b.id === targetBranchId
+            )?.shortName,
+        }
+      : null;
+
+    set({ generatedTimetables: grids });
+    return;
+  }
+
+  /*
+   * Cross-department LAB moves
+   *
+   * For a lab, make sure the destination has two
+   * consecutive periods available.
+   */
+
+  if (isLabStartA) {
+    const numPeriods = state.generalConfig.periodsPerDay;
+
+    if (period1 + 1 >= numPeriods) return;
+
+    if (
+      target[day2]?.[period2] ||
+      target[day2]?.[period2 + 1]
+    ) {
+      return;
+    }
+
+    source[day1][period1] = cB;
+    source[day1][period1 + 1] = null;
+
+    target[day2][period2] = {
+      ...cA!,
+      branchId: targetBranchId,
+      branchShortName:
+        state.branches.find(
+          (b) => b.id === targetBranchId
+        )?.shortName,
+      isLabContinuation: false,
+    };
+
+    target[day2][period2 + 1] = {
+      ...cA!,
+      branchId: targetBranchId,
+      branchShortName:
+        state.branches.find(
+          (b) => b.id === targetBranchId
+        )?.shortName,
+      isLabContinuation: true,
+    };
+
+    set({ generatedTimetables: grids });
+    return;
+  }
+
+  if (isLabStartB) {
+    const numPeriods = state.generalConfig.periodsPerDay;
+
+    if (period2 + 1 >= numPeriods) return;
+
+    if (
+      source[day1]?.[period1] ||
+      source[day1]?.[period1 + 1]
+    ) {
+      return;
+    }
+
+    target[day2][period2] = cA;
+
+    target[day2][period2 + 1] = null;
+
+    source[day1][period1] = {
+      ...cB!,
+      branchId: sourceBranchId,
+      branchShortName:
+        state.branches.find(
+          (b) => b.id === sourceBranchId
+        )?.shortName,
+      isLabContinuation: false,
+    };
+
+    source[day1][period1 + 1] = {
+      ...cB!,
+      branchId: sourceBranchId,
+      branchShortName:
+        state.branches.find(
+          (b) => b.id === sourceBranchId
+        )?.shortName,
+      isLabContinuation: true,
+    };
+
+    set({ generatedTimetables: grids });
+  }
+},
 
       updateTimetables: (timetables) =>
         set({ generatedTimetables: timetables }),

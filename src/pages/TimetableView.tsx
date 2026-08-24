@@ -80,6 +80,28 @@ export default function TimetableView() {
   function handleExportPDF() { exportPDF(); setShowExportMenu(false); }
   function handleExportExcel() { exportExcel(generatedTimetables, branches, generalConfig); toast({ title: 'Excel exported!', variant: 'success' }); setShowExportMenu(false); }
   function handleSwap(day1: number, period1: number, day2: number, period2: number) { swapCells(activeBranch, day1, period1, day2, period2); toast({ title: 'Cells swapped', variant: 'success' }); }
+  function handleAllDepartmentSwap(
+  sourceBranchId: string,
+  sourceDay: number,
+  sourcePeriod: number,
+  targetBranchId: string,
+  targetDay: number,
+  targetPeriod: number
+) {
+  swapCells(
+    sourceBranchId,
+    sourceDay,
+    sourcePeriod,
+    targetDay,
+    targetPeriod,
+    targetBranchId
+  );
+
+  toast({
+    title: 'Classes moved',
+    variant: 'success',
+  });
+}
   function handleEditInputs() { editInputs(); navigate('/generator'); toast({ title: 'Editing inputs — your data is preserved', variant: 'default' }); }
 
   return (
@@ -92,13 +114,13 @@ export default function TimetableView() {
         </div>
         <div className="flex items-center gap-2 flex-wrap">
           <button onClick={handleEditInputs} className="h-9 px-3 sm:px-4 surface-high rounded-xl text-sm font-display font-medium flex items-center gap-1.5 sm:gap-2 text-secondary transition-all hover:scale-[1.02] active:scale-[0.98]"><Pencil className="size-3.5" /><span className="hidden sm:inline">Edit Inputs</span></button>
-          {viewMode === 'branch' && (
+          {(viewMode === 'branch' || viewMode === 'all-departments') &&  (
             <div className="flex items-center gap-0.5 surface-high rounded-xl overflow-hidden">
               <button onClick={() => { undo(); }} disabled={!canUndo} className="h-9 px-2 sm:px-3 text-sm font-display font-medium flex items-center gap-1 hover:bg-primary/10 transition-all disabled:opacity-30" title="Undo"><Undo2 className="size-3.5" /></button>
               <button onClick={() => { redo(); }} disabled={!canRedo} className="h-9 px-2 sm:px-3 text-sm font-display font-medium flex items-center gap-1 hover:bg-primary/10 transition-all disabled:opacity-30" title="Redo"><Redo2 className="size-3.5" /></button>
             </div>
           )}
-          {viewMode === 'branch' && (
+          {(viewMode === 'branch' || viewMode === 'all-departments') && (
             <button onClick={() => setDragEnabled(!dragEnabled)}
               className={cn('h-9 px-3 sm:px-4 rounded-xl text-sm font-display font-medium flex items-center gap-1.5 sm:gap-2 transition-all',
                 dragEnabled ? 'bg-primary/15 text-primary glow-primary' : 'surface-high hover:bg-primary/5')}>
@@ -203,7 +225,15 @@ export default function TimetableView() {
         </>
       )}
 
-      {viewMode === 'all-departments' && <AllDepartmentsView timetables={generatedTimetables} branches={branches} config={generalConfig} />}
+      {viewMode === 'all-departments' && (
+  <AllDepartmentsView
+    timetables={generatedTimetables}
+    branches={branches}
+    config={generalConfig}
+    enableDrag={dragEnabled}
+    onSwap={handleAllDepartmentSwap}
+  />
+)}
       {viewMode === 'lab' && <LabView timetables={generatedTimetables} branches={branches} config={generalConfig} labRooms={labRooms} />}
 
       <div className="no-print flex flex-wrap gap-5 mt-6 text-xs text-muted-foreground">
